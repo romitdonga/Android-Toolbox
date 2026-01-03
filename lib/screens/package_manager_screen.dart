@@ -18,30 +18,30 @@ import '../utils/const.dart';
 
 class PackageManagerScreen extends StatefulWidget {
   final Device device;
-  const PackageManagerScreen({Key? key,required this.device}) : super(key: key);
+  const PackageManagerScreen({super.key, required this.device});
 
   @override
-  _PackageManagerScreenState createState() => _PackageManagerScreenState(device);
+  _PackageManagerScreenState createState() =>
+      _PackageManagerScreenState(device);
 }
 
 class _PackageManagerScreenState extends State<PackageManagerScreen> {
-
   final Device device;
 
   late ADBService adbService;
 
   _PackageManagerScreenState(this.device);
 
-  AppType _appType=AppType.user;
+  AppType _appType = AppType.user;
 
-  Map<String,dynamic> _selectedPackageInfo={};
+  Map<String, dynamic> _selectedPackageInfo = {};
 
-  final TextEditingController _searchbarController=TextEditingController();
-  final ScrollController _appsListScrollController=ScrollController();
+  final TextEditingController _searchbarController = TextEditingController();
+  final ScrollController _appsListScrollController = ScrollController();
 
   @override
   void initState() {
-    adbService=ADBService(device: device);
+    adbService = ADBService(device: device);
     super.initState();
   }
 
@@ -66,44 +66,54 @@ class _PackageManagerScreenState extends State<PackageManagerScreen> {
                 Row(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.all(4.0),
-                      child: IconNameMaterialButton(
-                        icon: Icon(Icons.android_rounded,color: SystemTheme.accentColor.accent,size: 35,),
-                        spacing: 4,
-                        text: Text("Install",style: TextStyle(
-                          color: SystemTheme.accentColor.accent,
-                          fontSize: 20
-                        ),),
-                        onPressed: () async{
-                          await showDialog(
-                            context: context,
-                            barrierDismissible: false,
-                            builder: (context)=>ApkInstallDialog(device: device,),
-                          );
-                          setState(() {
-                            _appType = AppType.user;
-                            _searchbarController.text="";
-                          });
-                        },
-                      )
-                    ),
+                        padding: const EdgeInsets.all(4.0),
+                        child: IconNameMaterialButton(
+                          icon: Icon(
+                            Icons.android_rounded,
+                            color: SystemTheme.accentColor.accent,
+                            size: 35,
+                          ),
+                          spacing: 4,
+                          text: Text(
+                            "Install",
+                            style: TextStyle(
+                                color: SystemTheme.accentColor.accent,
+                                fontSize: 20),
+                          ),
+                          onPressed: () async {
+                            await showDialog(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (context) => ApkInstallDialog(
+                                device: device,
+                              ),
+                            );
+                            setState(() {
+                              _appType = AppType.user;
+                              _searchbarController.text = "";
+                            });
+                          },
+                        )),
                     SizedBox(
                       width: 250,
                       child: TextField(
-                        onSubmitted: (value){setState(() {});},
+                        onSubmitted: (value) {
+                          setState(() {});
+                        },
                         controller: _searchbarController,
                         decoration: InputDecoration(
                             border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(15)
-                            ),
+                                borderRadius: BorderRadius.circular(15)),
                             hintText: "Search by package name",
-                          suffixIcon: IconButton(
-                            icon: Icon(Icons.search_rounded,color: SystemTheme.accentColor.accent,),
-                            onPressed: (){
-                              setState(() {});
-                            },
-                          )
-                        ),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                Icons.search_rounded,
+                                color: SystemTheme.accentColor.accent,
+                              ),
+                              onPressed: () {
+                                setState(() {});
+                              },
+                            )),
                       ),
                     ),
                   ],
@@ -113,16 +123,24 @@ class _PackageManagerScreenState extends State<PackageManagerScreen> {
                   child: Row(
                     children: [
                       IconNameMaterialButton(
-                        icon: Icon(Icons.system_update_alt_rounded,color: SystemTheme.accentColor.accent,size: 30,),
+                        icon: Icon(
+                          Icons.system_update_alt_rounded,
+                          color: SystemTheme.accentColor.accent,
+                          size: 30,
+                        ),
                         spacing: 4,
-                        text: Text("Reinstall system app",style: TextStyle(
-                            color: SystemTheme.accentColor.accent,
-                            fontSize: 15
-                        ),),
-                        onPressed: () async{
+                        text: Text(
+                          "Reinstall system app",
+                          style: TextStyle(
+                              color: SystemTheme.accentColor.accent,
+                              fontSize: 15),
+                        ),
+                        onPressed: () async {
                           await showDialog(
                             context: context,
-                            builder: (context)=>ReinstallSystemAppDialog(adbService: adbService,),
+                            builder: (context) => ReinstallSystemAppDialog(
+                              adbService: adbService,
+                            ),
                           );
                           setState(() {});
                         },
@@ -131,31 +149,46 @@ class _PackageManagerScreenState extends State<PackageManagerScreen> {
                         underline: Container(),
                         value: _appType,
                         borderRadius: BorderRadius.circular(18),
-                        dropdownColor: Theme.of(context).brightness==Brightness.light?Colors.white:kDarkModeMenuColor,
+                        dropdownColor:
+                            Theme.of(context).brightness == Brightness.light
+                                ? Colors.white
+                                : kDarkModeMenuColor,
                         items: [
                           DropdownMenuItem(
                             value: AppType.user,
                             child: CustomListTile(
-                              icon: Icon(FontAwesomeIcons.user,color: SystemTheme.accentColor.accent,),
-                              title: isPreIceCreamSandwichAndroid(device.androidAPILevel)?"All apps":"User apps",
+                              icon: Icon(
+                                FontAwesomeIcons.user,
+                                color: SystemTheme.accentColor.accent,
+                              ),
+                              title: isPreIceCreamSandwichAndroid(
+                                      device.androidAPILevel)
+                                  ? "All apps"
+                                  : "User apps",
                             ),
                           ),
                           DropdownMenuItem(
                             value: AppType.system,
                             child: CustomListTile(
-                              icon: Icon(Icons.system_update,color: SystemTheme.accentColor.accent,),
+                              icon: Icon(
+                                Icons.system_update,
+                                color: SystemTheme.accentColor.accent,
+                              ),
                               title: "System apps",
                             ),
                           ),
                         ],
-                        onChanged: isPreIceCreamSandwichAndroid(device.androidAPILevel)?null:(AppType? appType){
-                          if(_appType!=appType!){
-                            setState(() {
-                              _selectedPackageInfo={};
-                              _appType=appType;
-                            });
-                          }
-                        },
+                        onChanged:
+                            isPreIceCreamSandwichAndroid(device.androidAPILevel)
+                                ? null
+                                : (AppType? appType) {
+                                    if (_appType != appType!) {
+                                      setState(() {
+                                        _selectedPackageInfo = {};
+                                        _appType = appType;
+                                      });
+                                    }
+                                  },
                       ),
                       PopupMenuButton(
                         icon: Icon(
@@ -165,29 +198,81 @@ class _PackageManagerScreenState extends State<PackageManagerScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(28),
                         ),
-                        itemBuilder: (context)=>[
+                        itemBuilder: (context) => [
                           PopupMenuItem(
                             child: ListTile(
                               leading: Icon(
                                 FontAwesomeIcons.download,
-                                color: Theme.of(context).brightness==Brightness.light?SystemTheme.accentColor.accent:null,
+                                color: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? SystemTheme.accentColor.accent
+                                    : null,
                               ),
-                              dense:false,
+                              dense: false,
                               title: Text(
                                 "Backup APKs",
                                 style: TextStyle(
-                                  color: Theme.of(context).brightness==Brightness.light?SystemTheme.accentColor.accent:null,
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.light
+                                      ? SystemTheme.accentColor.accent
+                                      : null,
                                 ),
                               ),
                             ),
-                            onTap: (){
-                              Future.delayed(const Duration(seconds: 0),(){
+                            onTap: () {
+                              Future.delayed(const Duration(seconds: 0), () {
                                 showDialog(
                                   context: context,
                                   barrierDismissible: false,
-                                  builder: (context)=>APKBackupDialog(adbService: adbService,),
+                                  builder: (context) => APKBackupDialog(
+                                    adbService: adbService,
+                                  ),
                                 );
                               });
+                            },
+                          ),
+                          PopupMenuItem(
+                            child: ListTile(
+                              leading: Icon(
+                                Icons.message_rounded,
+                                color: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? SystemTheme.accentColor.accent
+                                    : null,
+                              ),
+                              dense: false,
+                              title: Text(
+                                "Auto Setup SMS",
+                                style: TextStyle(
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.light
+                                      ? SystemTheme.accentColor.accent
+                                      : null,
+                                ),
+                              ),
+                            ),
+                            onTap: () async {
+                              List<Map<String, dynamic>> results =
+                                  await adbService.autoSetupDefaultSMS();
+                              String currentHolders =
+                                  await adbService.getSMSRoleHolders();
+
+                              String resultSummary = results
+                                  .map((r) =>
+                                      "${r['packageName']}: ${r['exitCode'] == 0 ? 'SUCCESS' : 'FAILED'}")
+                                  .join("\n");
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                      "Results:\n$resultSummary\n\nCurrent Holders: $currentHolders"),
+                                  duration: const Duration(seconds: 10),
+                                  action: SnackBarAction(
+                                    label: "Dismiss",
+                                    onPressed: () {},
+                                  ),
+                                ),
+                              );
                             },
                           ),
                         ],
@@ -207,37 +292,54 @@ class _PackageManagerScreenState extends State<PackageManagerScreen> {
               Expanded(
                 child: Card(
                   child: FutureBuilder(
-                    future: adbService.getAppPackageInfo(_appType),
-                    builder: (BuildContext context, AsyncSnapshot<List<Map<String,dynamic>>> snapshot) {
-                      if(!snapshot.hasData){
-                        return const ShimmerAppsList();
-                      }
-                      return ListView.builder(
-                        controller: _appsListScrollController,
-                        itemCount: snapshot.data!.length,
-                        itemBuilder: (context,index){
-                          if(snapshot.data![index]['packageName']!="" && !snapshot.data![index]['packageName']!.contains(_searchbarController.text)){
-                            return Container();
-                          }
-                          return ListTile(
-                            leading: const Icon(Icons.android,color: Colors.green,),
-                            title: Text(snapshot.data![index]['packageName']!),
-                            onTap: (){
-                              setState(() {
-                                _selectedPackageInfo=snapshot.data![index];
-                              });
-                            },
-                          );
-                        },
-                      );
-                    }
-                  ),
+                      future: adbService.getAppPackageInfo(_appType),
+                      builder: (BuildContext context,
+                          AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+                        if (!snapshot.hasData) {
+                          return const ShimmerAppsList();
+                        }
+                        return ListView.builder(
+                          controller: _appsListScrollController,
+                          itemCount: snapshot.data!.length,
+                          itemBuilder: (context, index) {
+                            if (snapshot.data![index]['packageName'] != "" &&
+                                !snapshot.data![index]['packageName']!
+                                    .contains(_searchbarController.text)) {
+                              return Container();
+                            }
+                            return ListTile(
+                              leading: const Icon(
+                                Icons.android,
+                                color: Colors.green,
+                              ),
+                              title:
+                                  Text(snapshot.data![index]['packageName']!),
+                              onTap: () {
+                                setState(() {
+                                  _selectedPackageInfo = snapshot.data![index];
+                                });
+                              },
+                            );
+                          },
+                        );
+                      }),
                 ),
               ),
               Expanded(
-                child: Card(
-                  color: Theme.of(context).brightness==Brightness.dark?Colors.white.withOpacity(0.05):null,
-                  child: PackageInfo(device: device,packageInfo: _selectedPackageInfo,adbService: adbService,onUninstallComplete: (){setState(() {_selectedPackageInfo={};});},))),
+                  child: Card(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white.withOpacity(0.05)
+                          : null,
+                      child: PackageInfo(
+                        device: device,
+                        packageInfo: _selectedPackageInfo,
+                        adbService: adbService,
+                        onUninstallComplete: () {
+                          setState(() {
+                            _selectedPackageInfo = {};
+                          });
+                        },
+                      ))),
             ],
           ),
         ),
@@ -247,36 +349,37 @@ class _PackageManagerScreenState extends State<PackageManagerScreen> {
 }
 
 class ShimmerAppsList extends StatelessWidget {
-  const ShimmerAppsList({Key? key}) : super(key: key);
+  const ShimmerAppsList({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
-      baseColor: Theme.of(context).brightness==Brightness.light?const Color(0xFFE0E0E0):Colors.black12,
-      highlightColor: Theme.of(context).brightness==Brightness.light?const Color(0xFFF5F5F5):Colors.blueGrey,
+      baseColor: Theme.of(context).brightness == Brightness.light
+          ? const Color(0xFFE0E0E0)
+          : Colors.black12,
+      highlightColor: Theme.of(context).brightness == Brightness.light
+          ? const Color(0xFFF5F5F5)
+          : Colors.blueGrey,
       child: ListView.builder(
-          itemBuilder: (context,index){
-            return ListTile(
-              leading: Container(
-                height: 25,
-                width: 25,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.black
-                ),
+        itemBuilder: (context, index) {
+          return ListTile(
+            leading: Container(
+              height: 25,
+              width: 25,
+              decoration: const BoxDecoration(
+                  shape: BoxShape.circle, color: Colors.black),
+            ),
+            title: Container(
+              height: 25,
+              width: 25,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(25),
+                color: Colors.black,
               ),
-              title: Container(
-                height: 25,
-                width: 25,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(25),
-                  color: Colors.black,
-                ),
-              ),
-            );
-          },
+            ),
+          );
+        },
       ),
     );
   }
 }
-

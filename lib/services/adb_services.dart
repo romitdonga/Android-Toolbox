@@ -207,7 +207,7 @@ class ADBService {
     if (paths.length == 1) {
       // only one package found, the most common case now
       // rename the destination file name by package name
-      chosenDirectory = path.join(chosenDirectory, packageName + ".apk");
+      chosenDirectory = path.join(chosenDirectory, "$packageName.apk");
     } else {
       // make a new directory named as package name if more than one package found
       chosenDirectory = path.join(chosenDirectory, packageName);
@@ -285,6 +285,119 @@ class ADBService {
     ProcessResult result = await Process.run(
         adbExecutable, ["-s", device.id, "shell", "am", "get-current-user"]);
     return result.stdout.toString().trim();
+  }
+
+  Future<bool> isPackageInstalled(String packageName) async {
+    ProcessResult result = await Process.run(adbExecutable,
+        ["-s", device.id, "shell", "pm", "list", "packages", packageName]);
+    return result.stdout.toString().contains("package:$packageName");
+  }
+
+  Future<Map<String, dynamic>> setSMSRoleHolder(String packageName) async {
+    String userId = await getCurrentUserID();
+    Map<String, dynamic> resultSummary = {
+      'packageName': packageName,
+      'commands': []
+    };
+
+    // 1. Set Role via RoleManager
+    print(
+        "Executing Task 1: adb -s ${device.id} shell cmd role add-role-holder --user $userId android.app.role.SMS $packageName");
+    ProcessResult roleResult = await Process.run(adbExecutable, [
+      "-s",
+      device.id,
+      "shell",
+      "cmd",
+      "role",
+      "add-role-holder",
+      "--user",
+      userId,
+      "android.app.role.SMS",
+      packageName
+    ]);
+
+    resultSummary['commands'].add({
+      'cmd': "role add-role-holder",
+      'exitCode': roleResult.exitCode,
+      'stderr': roleResult.stderr.toString()
+    });
+
+    // 2. Sync via Secure Settings (Deep-Sync)
+    print(
+        "Executing Task 2 (Deep Sync): adb -s ${device.id} shell settings put secure sms_default_application $packageName");
+    ProcessResult settingsResult = await Process.run(adbExecutable, [
+      "-s",
+      device.id,
+      "shell",
+      "settings",
+      "put",
+      "secure",
+      "sms_default_application",
+      packageName
+    ]);
+
+    resultSummary['commands'].add({
+      'cmd': "settings put secure",
+      'exitCode': settingsResult.exitCode,
+      'stderr': settingsResult.stderr.toString()
+    });
+
+    print(
+        "Result for $packageName: Role Exit(${roleResult.exitCode}), Sync Exit(${settingsResult.exitCode})");
+
+    return {
+      'exitCode':
+          (roleResult.exitCode == 0 && settingsResult.exitCode == 0) ? 0 : 1,
+      'packageName': packageName,
+      'details': resultSummary
+    };
+  }
+
+  Future<String> getSMSRoleHolders() async {
+    // Gets the current SMS role holders
+    ProcessResult result = await Process.run(adbExecutable, [
+      "-s",
+      device.id,
+      "shell",
+      "cmd",
+      "role",
+      "get-role-holders",
+      "android.app.role.SMS"
+    ]);
+    return result.stdout.toString().trim();
+  }
+
+  Future<List<Map<String, dynamic>>> autoSetupDefaultSMS() async {
+    // Priority: Woxxin > Samsung > Google
+    List<String> packages = [
+      "com.text.messenger.sms.textmessage", // Woxxin (Priority 1)
+      "com.samsung.android.messaging", // Samsung (Priority 2)
+      "com.google.android.apps.messaging", // Google (Fallback)
+    ];
+
+    List<Map<String, dynamic>> results = [];
+
+    for (String pkg in packages) {
+      print("Checking if $pkg is installed...");
+      if (await isPackageInstalled(pkg)) {
+        print("$pkg is installed. Attempting to set as default...");
+        Map<String, dynamic> result = await setSMSRoleHolder(pkg);
+        results.add(result);
+
+        if (result['exitCode'] == 0) {
+          print("SUCCESS: $pkg set as default. Stopping auto-setup.");
+          break; // Stop at first success!
+        }
+      } else {
+        print("SKIP: $pkg is not installed.");
+        results.add({
+          'packageName': pkg,
+          'exitCode': -1, // Custom code for not installed
+          'status': "Not Installed"
+        });
+      }
+    }
+    return results;
   }
 
   Future<int> uninstallSystemAppForUser({required String packageName}) async {
@@ -395,7 +508,7 @@ class ADBService {
 
   Future<int> includeInMediaScanner(String path) async {
     //Removes the .nomedia file from the specified directory. Media scanner refresh required
-    return deleteItem(itemPath: path + ".nomedia");
+    return deleteItem(itemPath: "$path.nomedia");
   }
 
   Future<int> revokeInternetAccess(String packageName) async {
